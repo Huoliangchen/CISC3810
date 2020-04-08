@@ -1,0 +1,164 @@
+class(classNo(PK),className, credit, instructor,start_time, end_time, term, location)
+	
+class_requirnment(classNo(PK and FK reference on class.classNo),className, classNoRep, classNoRepName)
+	          
+student(studentID(PK), password, lastname, firstname)
+
+class_history(studentID(FK reference on student.studentID), lastname, firstname, classNo(Fk reference on class.classNo), className, grade) PK(studentID,classNo)
+
+schedule(studentID, classNo(FK reference on class.classNo), start_time, end_time) PK(studentID, ClassNo)
+
+--------------------------------------------
+CREATE TABLE `registrardb`.`class` (
+  
+  `classNo` INT NOT NULL,
+
+  `className` VARCHAR(45) NOT NULL,
+
+  `credit` INT NOT NULL,
+
+  `instrutor` VARCHAR(45) NOT NULL,
+
+  `start_time` TIME NOT NULL,
+
+  `end_time` TIME NOT NULL,
+
+  `term` VARCHAR(45) NOT NULL,
+
+  `location` VARCHAR(45) NOT NULL,
+
+  PRIMARY KEY (`classNo`));
+
+INSERT INTO `registrardb`.`class` (
+	`classNo`, `className`, `credit`, `instructor`, `start_time`, `end_time`, `term`, `location`) 
+	VALUES ('1', 'cisc1', '3', 'prof A', '9:00', '12:00', 'spring2019', 'room101');
+
+INSERT INTO `registrardb`.`class` (
+	`classNo`, `className`, `credit`, `instructor`, `start_time`, `end_time`, `term`, `location`)
+	VALUES ('2', 'cisc2', '3', 'prof A', '13:00', '15:00', 'spring2019', 'room102');
+
+INSERT INTO `registrardb`.`class` (
+	`classNo`, `className`, `credit`, `instructor`, `start_time`, `end_time`, `term`, `location`) 
+	VALUES ('3', 'math1', '3', 'prof B', '9:00', '12:00', 'spring2019', 'room103');
+
+INSERT INTO `registrardb`.`class` (
+	`classNo`, `className`, `credit`, `instructor`, `start_time`, `end_time`, `term`, `location`) 
+	VALUES ('4', 'math2', '3', 'prof B', '13:00', '15:00', 'spring2019', 'room104');
+INSERT INTO `registrardb`.`class` (
+	`classNo`, `className`, `credit`, `instructor`, `start_time`, `end_time`, `term`, `location`) 
+	VALUES ('5', 'cisc3', '3', 'profA', '15:00:00', '16:00:00', 'Spring2019', 'room105');
+	
+INSERT INTO `registrardb`.`class` (
+	`classNo`, `className`, `credit`, `instructor`, `start_time`, `end_time`, `term`, `location`) 
+	VALUES ('6', 'math3', '3', 'profA', '14:00:00', '15:00:00', 'Spring2019', 'room106');
+
+
+------------------------------------------------------------------
+CREATE TABLE `registrardb`.`class_requirement` (
+
+  `classNo` INT NOT NULL,
+
+  `className` VARCHAR(45) NOT NULL,
+
+  `classNoReq` INT NULL,
+
+  `classReqName` VARCHAR(45) NULL,
+
+  PRIMARY KEY (`classNo`),
+
+  FOREIGN KEY (classNo) REFERENCES class(classNo)
+);
+
+
+INSERT INTO `registrardb`.`class_requirement` (
+	`classNo`, `className`, `classNoReq`, `classReqName`) 
+	VALUES ('2', 'cisc2', '1', 'cisc1');
+
+INSERT INTO `registrardb`.`class_requirement` (
+	`classNo`, `className`, `classNoReq`, `classReqName`) 
+	VALUES ('4', 'math2', '3', 'math1');
+
+INSERT INTO `registrardb`.`class_requirement` (
+	`classNo`, `className`, `classNoReq`, `classReqName`) 
+	VALUES ('5', 'cisc3', '2', 'cisc2');
+
+INSERT INTO `registrardb`.`class_requirement` (
+`classNo`, `className`, `classNoReq`, `classReqName`) 
+VALUES ('6', 'math3', '4', 'math2');
+
+
+------------------------------------------------------------------
+CREATE TABLE `registrardb`.`student` (
+
+  `studentID` INT NOT NULL,
+
+  `password` VARCHAR(45) NOT NULL,
+
+  `lastName` VARCHAR(45) NOT NULL,
+
+  `firstName` VARCHAR(45) NOT NULL,
+
+  PRIMARY KEY (`studentID`));
+
+
+INSERT INTO `registrardb`.`student` 
+ (`studentID`, `password`, `lastName`, `firstName`)
+ VALUES ('1', '123', 'chen', 'hl');
+
+INSERT INTO `registrardb`.`student`
+ (`studentID`, `password`, `lastName`, `firstName`)
+ VALUES ('2', '123', 'chen', 'yc');
+
+
+-----------------------------------------------------------
+CREATE TABLE `registrardb`.`class_history` (
+
+  `studentID` INT NOT NULL,
+  `lastname` VARCHAR(45) NOT NULL,
+  `firstname` VARCHAR(45) NOT NULL,
+
+  `ClassNo` INT NOT NULL,
+  `ClassName` VARCHAR(45) NOT NULL,
+  `grade` VARCHAR(45) NOT NULL,
+
+  PRIMARY KEY (`studentID`, `ClassNo`),
+
+  FOREIGN KEY (studentID) REFERENCES student (studentID),
+
+  FOREIGN KEY (classNo) REFERENCES class (classNO)
+);
+
+
+------------------------------------------------------------------------
+CREATE TABLE `registrardb`.`schedule` (
+
+  `studentID` INT NOT NULL,
+
+  `classNo` INT NOT NULL,
+
+  `start_time` TIME NOT NULL,
+
+  `end_time` TIME NOT NULL,
+
+  PRIMARY KEY (`studentID`, `classNo`),
+
+  FOREIGN KEY (classNo) REFERENCES class(classNo)
+);
+
+
+TRIGGER `schedule_BEFORE_INSERT` 
+BEFORE INSERT ON `schedule` 
+FOR EACH ROW BEGIN
+
+	if exists (select start_time, end_time from schedule
+
+		where start_time <= new. end_time
+                
+		and end_time >= new. start_time
+                
+		and studentID = new.studentID) then
+
+signal sqlstate '45000' SET MESSAGE_TEXT = 'Class Time overlap! Please Check!';
+  end if;
+
+END/
